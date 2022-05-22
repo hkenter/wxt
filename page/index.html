@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>在线词云生成工具</title>
+<style>
+
+	body {
+		font-family: Microsoft Yahei;
+		font-size:14px;
+	}
+
+	#txtJSON {
+		height: 200px;
+		width: 98%;
+		margin: 1% 1% 1% 1%;
+		border-color: #ccc;
+		background-color:#f8f8f8;
+		line-height:150%
+	}
+
+	h2,p{
+			margin: 1% 1% 1% 1%;
+		}
+
+	button {
+		 width: 50px;
+		 height: 20px;
+		margin-left: 1%;
+		}
+
+	i {
+		padding-left:10px;
+		color:#ccc;
+	}
+
+</style>
+<body>
+	<!--<h2>在线词云生成工具</h2>
+	<div>
+		<p>文本格式：词语,词频</br>
+		d3,10</br>
+		word,8</br>
+		cloud,7</p>
+	</div>
+	<div>
+		<textarea class="form-control" id="txtJSON" placeholder="粘贴文本到这里，不能有空行。"></textarea>
+	</div>
+	<p>
+		<label for="angle-count">宽</label>
+		<input type="number" id="width" value="300" min="200">
+		<label for="angle-from">高</label>
+		<input type="number" id="height" value="300" min="100">
+	</p>
+	<p>
+		<label for="angle-to">最小字体</label>
+		<input type="number" id="font-min" value="20" min="10">
+		<label for="angle-to">最大字体</label>
+		<input type="number" id="font-max" value="60" min="20">
+	</p>
+	<p>
+		<label for="scale-linear">旋转</label>
+		<input type="checkbox" name="scale" id="rotation" checked="True">
+	</p>
+
+<div>
+	<button id="convert" type="button" class="btn btn-sm" onclick="getin()" > 生成 </button><i>多次点击，可生成不同分布。</i>
+</div>-->
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+<script type="text/javascript">
+	$(document).ready(function () {
+		getin();
+	});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script src="static/d3.layout.cloud.js"></script>
+<script>
+
+
+var fill = d3.scale.category20();
+
+var x = Math.random()*2;
+console.log(x);
+console.log(~~(x));
+
+
+function getin(){
+
+	var dataset  = [];
+	var sizes = [];
+	//var input = document.getElementById("txtJSON").value;
+	debugger;
+	var input = '{{ ticker }}'
+	console.log(input)
+	lines = input.split("\n");
+	for(i=0;i<lines.length;i++){
+		keys = lines[i].split(",");
+
+		if(keys[0]!==""){
+			sizes.push(keys[1]);
+			dataset.push({"text":keys[0],"size":keys[1]});
+		}
+
+	}
+
+	//console.log(sizes);
+
+	var width = 800;
+	var height = 600;
+	var font_min = 50;
+	var font_max = 120;
+	var check = 'True';
+	var max = Math.max.apply(Math,sizes);
+	var min = Math.min.apply(Math,sizes);
+	var linear = d3.scale.linear()
+			.domain([min,max])
+			.range([font_min,font_max]);
+
+	d3.layout.cloud()
+	  .size([width, height])
+      .words(dataset)
+      .padding(5)
+	  .spiral("archimedean")
+      .rotate(function() { if(check){return ~~(Math.random() * 2) * 90; }else{return 0;}})
+      .font("Microsoft YaHei UI")
+      .fontSize(function(d) { return linear(d.size); })
+      .on("end", draw)
+      .start();
+
+	  window.scrollTo(0,document.body.scrollHeight);
+};
+
+  function draw(words) {
+
+	d3.select("svg").remove();
+
+    d3.select("body").append("svg")
+        .attr("width", 760)
+        .attr("height", 520)
+      .append("g")
+        .attr("transform", "translate(300,300)")
+      .selectAll("text")
+        .data(words)
+      .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Microsoft YaHei UI")
+        .style("fill", function(d, i) { return fill(i); })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+  }
+
+
+
+</script>
